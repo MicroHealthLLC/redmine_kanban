@@ -20,32 +20,25 @@ module RedmineKanban
         end
 
         scope :due_between, lambda {|a, b|
-          {
-            :conditions => ["#{Issue.table_name}.due_date > :start and #{Issue.table_name}.due_date <= :end",
+          where ["#{Issue.table_name}.due_date > :start and #{Issue.table_name}.due_date <= :end",
                             {
                               :start => a,
                               :end => b
                             }]
-          }
+
         }
 
         scope :due_sooner_than, lambda {|a|
-          {
-            :conditions => ["#{Issue.table_name}.due_date < ?", a]
-          }
+          where ["#{Issue.table_name}.due_date < ?", a]
 
         }
 
         scope :assigned_to, lambda {|user|
-          {
-            :conditions => ["#{Issue.table_name}.assigned_to_id = (?)", user.id]
-          }
+          where ["#{Issue.table_name}.assigned_to_id = (?)", user.id]
         }
 
         scope :created_by, lambda {|user|
-          {
-            :conditions => ["#{Issue.table_name}.author_id = (?)", user.id]
-          }
+         where ["#{Issue.table_name}.author_id = (?)", user.id]
         }
         
       end

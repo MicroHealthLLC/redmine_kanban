@@ -19,12 +19,12 @@ class KanbanIssuesController < ApplicationController
   helper :crm_templates if defined?(CrmTemplatesHelper)
   
   def new
-    @issue = Issue.new(:status => IssueStatus.default)
+    @issue = Issue.new
     @issue.author_login = User.current.login if @issue.respond_to?(:author_login)
-    valid_incoming_projects_scope = User.current.projects.scoped(:conditions => Project.allowed_to_condition(User.current, :add_issues))
+    valid_incoming_projects_scope = User.current.projects.where(Project.allowed_to_condition(User.current, :add_issues))
     
     if @settings['panes'].present? && @settings['panes']['incoming'].present? && @settings['panes']['incoming']['excluded_projects'].present?
-      valid_incoming_projects_scope = valid_incoming_projects_scope.scoped :conditions => ["#{Project.table_name}.id IN (?)", @settings['panes']['incoming']['excluded_projects']]
+      valid_incoming_projects_scope = valid_incoming_projects_scope.where ["#{Project.table_name}.id IN (?)", @settings['panes']['incoming']['excluded_projects']]
     end
                                                          
     @allowed_projects = valid_incoming_projects_scope.all
@@ -33,7 +33,7 @@ class KanbanIssuesController < ApplicationController
     @project ||= @allowed_projects.first
     @issue.project ||= @project
     # Tracker must be set before custom field values
-    @issue.tracker ||= @project.trackers.find((params[:issue] && params[:issue][:tracker_id]) || params[:tracker_id] || :first) if @project
+    @issue.tracker ||= @project.trackers.find((params[:issue] && params[:issue][:tracker_id]) || params[:tracker_id] || Tracker.first.id) if @project
     @allowed_statuses = @issue.new_statuses_allowed_to(User.current, true)
     @priorities = IssuePriority.all
 
@@ -47,9 +47,11 @@ class KanbanIssuesController < ApplicationController
     @project = @issue.project
     # journals/aaj compatiblity
     if defined?(ChiliProject) && ChiliProject::Compatibility.using_acts_as_journalized?
-      @journals = @issue.journals.find(:all, :include => [:user], :order => "#{Journal.table_name}.created_at ASC")
+      @journals = @issue.journals.include([:user]).references([:user]).
+          order("#{Journal.table_name}.created_at ASC")
     else
-      @journals = @issue.journals.find(:all, :include => [:user, :details], :order => "#{Journal.table_name}.created_on ASC")
+      @journals = @issue.journals.include([:user, :details]).references([:user, :details]).
+          order("#{Journal.table_name}.created_on ASC")
     end
     @journals.reverse! if User.current.wants_comments_in_reverse_order?
     @changesets = @issue.changesets.visible.all

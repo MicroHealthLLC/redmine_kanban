@@ -46,24 +46,18 @@ class KanbanIssue < ActiveRecord::Base
   # Named with a find_ prefix because of the name conflict with the
   # state transitions.
   scope :find_selected, lambda {
-    {
-      :order => "#{KanbanIssue.table_name}.position ASC",
-      :conditions => { :state => 'selected'}
-    }
+    order("#{KanbanIssue.table_name}.position ASC").
+        where({ :state => 'selected'})
   }
 
   scope :find_active, lambda {
-    {
-      :order => "#{KanbanIssue.table_name}.user_id ASC, #{KanbanIssue.table_name}.position ASC",
-      :conditions => { :state => 'active'}
-    }
+    order("#{KanbanIssue.table_name}.user_id ASC, #{KanbanIssue.table_name}.position ASC").
+      where({ :state => 'active'})
   }
 
   scope :find_testing, lambda {
-    {
-      :order => "#{KanbanIssue.table_name}.user_id ASC, #{KanbanIssue.table_name}.position ASC",
-      :conditions => { :state => 'testing'}
-    }
+    where({ :state => 'testing'}).
+        order("#{KanbanIssue.table_name}.user_id ASC, #{KanbanIssue.table_name}.position ASC")
   }
 
   scope :assigned, lambda {|user_id|
@@ -71,25 +65,18 @@ class KanbanIssue < ActiveRecord::Base
     if user_id && user_id <= 0
       user_id = nil
     end
-    {
-      :conditions => { :user_id => user_id}
-    }
+     where :user_id => user_id
   }
 
   scope :authored, lambda {|user_id|
-    {
-      :conditions => ["#{Issue.table_name}.author_id = ?", user_id],
-      :include => :issue
-    }
+    where("#{Issue.table_name}.author_id = ?", user_id).includes(:issue).references(:issue)
   }
 
   scope :for_projects, lambda { |projects|
     project_ids = projects.collect(&:id)
 
-    {
-      :conditions => ["#{Issue.table_name}.project_id IN (?)", project_ids],
-      :include => :issue
-    }
+    where( ["#{Issue.table_name}.project_id IN (?)", project_ids]).includes(:issue).references(:issue)
+
   }
 
   def self.find_for(user=nil, for_options=[])
@@ -127,8 +114,9 @@ class KanbanIssue < ActiveRecord::Base
       conditions = ''
     end
 
-    all(:conditions => [conditions, {:user => user_id}],
-        :include => [:issue => :watchers])
+    where(conditions, {:user => user_id}).
+        includes([:issue => :watchers]).
+        references([:issue => :watchers])
   end
 
   def remove_user

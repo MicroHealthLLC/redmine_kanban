@@ -193,16 +193,15 @@ class Kanban
       if role_id
         #query_conditions = ARCondition.new
         #query_conditions.add ["#{MemberRole.table_name}.role_id = ?", role_id]
-        query_scope = User.active.scoped :conditions => ["#{MemberRole.table_name}.role_id = ?", role_id]
+        query_scope = User.active.where ["#{MemberRole.table_name}.role_id = ?", role_id]
         #query_conditions.add "#{MemberRole.table_name}.member_id = #{Member.table_name}.id"
-        query_scope = query_scope.scoped :conditions => "#{MemberRole.table_name}.member_id = #{Member.table_name}.id"
+        query_scope = query_scope.where "#{MemberRole.table_name}.member_id = #{Member.table_name}.id"
         #query_conditions.add "#{Member.table_name}.user_id = #{User.table_name}.id"
-        query_scope = query_scope.scoped :conditions => "#{Member.table_name}.user_id = #{User.table_name}.id"
+        query_scope = query_scope.where "#{Member.table_name}.user_id = #{User.table_name}.id"
         #@users = User.active.all(:conditions => query_conditions.conditions,
-        @users = query_scope.all(
-                          :select => "users.*",
-                          :joins => "LEFT  JOIN members ON members.user_id = users.id LEFT  JOIN projects ON projects.id = members.project_id LEFT  JOIN member_roles ON (members.id = member_roles.member_id) LEFT  JOIN roles ON (roles.id = member_roles.role_id) LEFT  JOIN member_roles member_roles_members ON member_roles_members.member_id = members.id",
-                          :order => "users.firstname, users.lastname ")
+        @users = query_scope.select("users.*").
+        joins("LEFT  JOIN members ON members.user_id = users.id LEFT  JOIN projects ON projects.id = members.project_id LEFT  JOIN member_roles ON (members.id = member_roles.member_id) LEFT  JOIN roles ON (roles.id = member_roles.role_id) LEFT  JOIN member_roles member_roles_members ON member_roles_members.member_id = members.id").
+            order("users.firstname, users.lastname ")
       end
       @users ||= []
       @users = move_current_user_to_front
@@ -215,10 +214,10 @@ class Kanban
   # Find all of the projects referenced on the KanbanIssue and Issues
   def projects
     unless @projects
-      @projects = Project.active.all(:conditions => Project.allowed_to_condition(User.current, :view_issues))
+      @projects = Project.active.where(Project.allowed_to_condition(User.current, :view_issues))
       # User isn't a member but they created an issue which was moved out of their visibility
-      @projects += Project.active.all(:include => :issues,
-                               :conditions => ["#{Issue.table_name}.author_id = :user AND #{Project.table_name}.id NOT IN (:found_projects)", {:user => User.current.id, :found_projects => @projects.collect(&:id)}])
+      @projects += Project.active.includes(:issues).
+          references(:issues).where(["#{Issue.table_name}.author_id = :user AND #{Project.table_name}.id NOT IN (:found_projects)", {:user => User.current.id, :found_projects => @projects.collect(&:id)}])
 
       @projects = roll_up_projects_to_project_level(@projects).uniq
     end

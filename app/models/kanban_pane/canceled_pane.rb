@@ -13,14 +13,14 @@ class KanbanPane::CanceledPane < KanbanPane
     conditions << " AND #{Issue.table_name}.updated_on > :days"
     conditions = merge_for_option_conditions(conditions, for_option) if user.present?
     
-    issues = Issue.visible.all(:include => [:assigned_to, :watchers],
-                               :order => "#{Issue.table_name}.updated_on DESC",
-                               :conditions => [conditions, {
-                                                 :status => status_id,
-                                                 :days => days.to_f.days.ago,
-                                                 :user => user_id
-                                               }])
-
+    Issue.visible.includes(:assigned_to, :watchers).
+        references(:assigned_to, :watchers).
+        order("#{Issue.table_name}.updated_on DESC").
+        where(conditions, {
+            :status => status_id,
+            :days => days.to_f.days.ago,
+            :user => user_id
+        })
   end
   
 end

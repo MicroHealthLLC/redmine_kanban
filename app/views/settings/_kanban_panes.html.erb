@@ -30,7 +30,7 @@
     <%= content_tag(:label, l("kanban_label_finished_pane".to_sym)) + 
       select_tag("settings[panes][finished][status]",
                  content_tag(:option, '') +
-                 options_from_collection_for_select(IssueStatus.all(:conditions => {:is_closed => true}),
+                 options_from_collection_for_select(IssueStatus.where({:is_closed => true}),
                                                     :id,
                                                     :name,
                                                     finished_status)) %>
@@ -46,7 +46,7 @@
     <%= content_tag(:label, l("kanban_label_canceled_pane".to_sym)) + 
       select_tag("settings[panes][canceled][status]",
                  content_tag(:option, '') +
-                 options_from_collection_for_select(IssueStatus.all(:conditions => {:is_closed => true}),
+                 options_from_collection_for_select(IssueStatus.where({:is_closed => true}),
                                                     :id,
                                                     :name,
                                                     canceled_status)) %>

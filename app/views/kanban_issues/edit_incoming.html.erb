@@ -5,7 +5,7 @@
 <%= textilizable @issue, :description %>
 </div>
 
-<% labelled_form_for(:issue, @issue,
+<%= labelled_form_for(:issue, @issue,
                              :url => {:action => 'update', :id => @issue},
                              :html => {:id => 'issue-form', :method => :put}) do |f| %>
 

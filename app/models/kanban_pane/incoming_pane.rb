@@ -1,6 +1,6 @@
 class KanbanPane::IncomingPane < KanbanPane
   def get_issues(options={})
-    return [[]] if missing_settings('incoming')
+    return [] if missing_settings('incoming')
     for_option = options.delete(:for)
     user = options.delete(:user)
     user_id = user ? user.id : nil
@@ -13,15 +13,15 @@ class KanbanPane::IncomingPane < KanbanPane
     conditions = merge_for_option_conditions(conditions, for_option) if user.present?
     conditions << " AND #{Project.table_name}.status = 1"
     
-    return Issue.visible.
-      all(:limit => limit,
-          :order => "#{Issue.table_name}.created_on ASC",
-          :include => [:watchers, :project],
-          :conditions => [conditions, {
-                            :status => settings['panes']['incoming']['status'],
-                            :excluded_ids => exclude_ids,
-                            :user => user_id
-                          }])
+    Issue.visible.
+        where(conditions, {
+            :status => settings['panes']['incoming']['status'],
+            :excluded_ids => exclude_ids,
+            :user => user_id
+        }).limit(limit).
+        order("#{Issue.table_name}.created_on ASC").
+        includes([:watchers, :project]).
+        references([:watchers, :project])
   end
 
 end
