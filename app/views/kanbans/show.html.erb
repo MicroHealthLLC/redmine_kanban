@@ -14,7 +14,8 @@
 <%= render :partial => 'kanbans/user_help', :locals => {:kanban_settings => @settings } %>
 <%= render :partial => 'color_help' %>
 
-<%= render(:partial => 'kanbans/deadlines', :locals => {:kanban => @kanban, :user => nil, :scope_method => :all}) %>
+<%= render(:partial => 'kanbans/deadlines', :locals => {:kanban => @kanban, :user => nil,
+                                                        :scope_method => :order}) %>
 
 <div id="kanban">
   <div id="kanban-container" class="equal-column"> <!-- for equal columns -->
@@ -58,7 +59,7 @@
       </div>
       <div style="clear:both"></div>
 
-      <%= render :partial => 'user', :collection => @kanban.users %>
+      <%= render :partial => 'user', collection: @kanban.users %>
     </div>
   </div>
 </div>

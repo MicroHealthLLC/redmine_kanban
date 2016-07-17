@@ -16,15 +16,15 @@ class KanbanPane::BacklogPane < KanbanPane
     conditions << " AND #{Issue.table_name}.project_id IN (:project_ids) " if restrict_to_project_ids.present?
     conditions << " AND #{Project.table_name}.status = 1"
 
-    issues = Issue.visible.all(:limit => limit,
-                               :order => "#{RedmineKanban::KanbanCompatibility::IssuePriority.klass.table_name}.position ASC, #{Issue.table_name}.created_on ASC",
-                               :include => [:priority, :project, :watchers],
-                               :conditions => [conditions, {
-                                                 :status => settings['panes']['backlog']['status'],
-                                                 :excluded_ids => exclude_ids,
-                                                 :user => user_id,
-                                                 :project_ids => restrict_to_project_ids
-                                               }])
+    issues = Issue.visible.where({
+                                     :status => settings['panes']['backlog']['status'],
+                                     :excluded_ids => exclude_ids,
+                                     :assigned_to_id => user_id,
+                                     :project_id => restrict_to_project_ids
+                                 }).limit(limit).
+                               order("#{RedmineKanban::KanbanCompatibility::IssuePriority.klass.table_name}.position ASC, #{Issue.table_name}.created_on ASC").
+                               includes([:priority, :project, :watchers]).
+                               references([:priority, :project, :watchers])
 
 
   end

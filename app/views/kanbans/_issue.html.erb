@@ -1,5 +1,5 @@
 <% if issue %>
-<li id="issue_<%= issue.id %>" class="<%= over_pane_limit?(limit, issue_counter) if defined?(limit) -%> <%= kanban_issue_css_classes(issue) %>">
+<li id="issue_<%= issue.id %>" class="active-issues <%= over_pane_limit?(limit, issue_counter) if defined?(limit) -%> <%= kanban_issue_css_classes(issue) %>">
   <div class="issue-details">
 
     <div class="issue-details-header">

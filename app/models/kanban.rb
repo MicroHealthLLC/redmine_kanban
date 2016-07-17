@@ -190,17 +190,17 @@ class Kanban
       @users = [@user]
     else
       role_id = @settings["staff_role"].to_i
-      if role_id
+      if role_id > 0
         #query_conditions = ARCondition.new
         #query_conditions.add ["#{MemberRole.table_name}.role_id = ?", role_id]
-        query_scope = User.active.where ["#{MemberRole.table_name}.role_id = ?", role_id]
+        query_scope = User.active.joins("LEFT  JOIN members ON members.user_id = users.id LEFT  JOIN projects ON projects.id = members.project_id LEFT  JOIN member_roles ON (members.id = member_roles.member_id) LEFT  JOIN roles ON (roles.id = member_roles.role_id) LEFT  JOIN member_roles member_roles_members ON member_roles_members.member_id = members.id")
+        query_scope = query_scope.where "#{MemberRole.table_name}.role_id = ?", role_id
         #query_conditions.add "#{MemberRole.table_name}.member_id = #{Member.table_name}.id"
         query_scope = query_scope.where "#{MemberRole.table_name}.member_id = #{Member.table_name}.id"
         #query_conditions.add "#{Member.table_name}.user_id = #{User.table_name}.id"
         query_scope = query_scope.where "#{Member.table_name}.user_id = #{User.table_name}.id"
         #@users = User.active.all(:conditions => query_conditions.conditions,
         @users = query_scope.select("users.*").
-        joins("LEFT  JOIN members ON members.user_id = users.id LEFT  JOIN projects ON projects.id = members.project_id LEFT  JOIN member_roles ON (members.id = member_roles.member_id) LEFT  JOIN roles ON (roles.id = member_roles.role_id) LEFT  JOIN member_roles member_roles_members ON member_roles_members.member_id = members.id").
             order("users.firstname, users.lastname ")
       end
       @users ||= []
@@ -373,7 +373,8 @@ class Kanban
   private
 
   def move_current_user_to_front
-    if user = @users.delete(User.current)
+    users = @users.to_a
+    if user = users.delete(User.current)
       @users.unshift(user)
     else
       @users

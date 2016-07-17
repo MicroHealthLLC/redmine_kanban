@@ -9,7 +9,7 @@ class KanbanPane::QuickPane < KanbanPane
         includes([:priority, :project]).references([:priority, :project]).
         limit(settings['panes']['quick-tasks']['limit']).
         order("#{RedmineKanban::KanbanCompatibility::IssuePriority.klass.table_name}.position ASC,
-#{Issue.table_name}.created_on ASC").
+#{Issue.table_name}.created_on ASC")
 
 
     return group_by_priority_position(issues)

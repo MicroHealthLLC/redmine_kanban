@@ -13,9 +13,9 @@ class KanbanIssue < ActiveRecord::Base
   # For acts_as_list
   def scope_condition
     if user_id
-      "state = #{connection.quote(state)} AND user_id = #{connection.quote(user_id)}"
+      "state = #{ActiveRecord::Base.connection.quote(state)} AND user_id = #{ActiveRecord::Base.connection.quote(user_id)}"
     else
-      "state = #{connection.quote(state)} AND user_id IS NULL"
+      "state = #{ActiveRecord::Base.connection.quote(state)} AND user_id IS NULL"
     end
   end
 
@@ -129,7 +129,7 @@ class KanbanIssue < ActiveRecord::Base
   def self.update_from_issue(issue)
     return true if issue.nil?
     if self.configured_statuses.include? issue.status.id.to_s
-      kanban_issue = KanbanIssue.find_or_initialize_by_issue_id(issue.id)
+      kanban_issue = KanbanIssue.where(issue_id: issue.id).first_or_initialize
       kanban_issue.issue_id = issue.id
       kanban_issue.state = pane_for_status(issue.status)
 

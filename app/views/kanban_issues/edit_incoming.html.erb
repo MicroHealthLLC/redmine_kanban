@@ -1,4 +1,4 @@
-<h2><%= link_to_issue(@issue, :project => true) %></h2>
+<h2><%= link_to @issue.subject, issue_url(@issue) %></h2>
 
 <p><strong><%=l(:field_description)%></strong></p>
 <div class="wiki short-scroll">
